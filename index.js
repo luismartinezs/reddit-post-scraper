@@ -23,9 +23,10 @@ async function fetchCommentsRecursively(commentsData) {
     if (commentData.kind === 't1') {
       const author = commentData.data.author;
       const content = commentData.data.body;
+      const score = commentData.data.score;
 
       if (author !== '[deleted]' || (content !== '[removed]' && content !== '[deleted]')) {
-        comments.push({ author, content });
+        comments.push({ author, content, score });
       }
 
       // Fetch nested comments (replies)
@@ -35,11 +36,18 @@ async function fetchCommentsRecursively(commentsData) {
       }
     } else if (commentData.kind === 'more') {
       for (const childId of commentData.data.children) {
-        const response = await axios.get(
-          `https://www.reddit.com/api/info.json?id=t1_${childId}`
-        );
-        const childCommentsData = response.data.data.children;
-        comments.push(...(await fetchCommentsRecursively(childCommentsData)));
+        const response = await fetch(`https://www.reddit.com/api/info.json?id=t1_${childId}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/93.0'
+          }
+        });
+
+        if (response.ok) {
+          const responseData = await response.json();
+          if (responseData.data && responseData.data.children) {
+            comments.push(...(await fetchCommentsRecursively(responseData.data.children)));
+          }
+        }
       }
     }
   }
@@ -62,7 +70,7 @@ async function fetchComments(url, after = '') {
       return comments.concat(moreComments);
     }
 
-    return comments;
+    return comments.sort((a, b) => b.score - a.score);
   } catch (error) {
     console.error('Error fetching comments from Reddit API:', error.message);
     return [];
