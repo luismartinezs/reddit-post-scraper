@@ -43,10 +43,10 @@ async function generateSummary(content) {
 
   try {
     // const maxLength = 8192; // Maximum allowed tokens
-    const maxLength = 8192 * 4; // Maximum allowed tokens
+    const maxLength = 8192 * 3; // Maximum allowed tokens
     const truncatedContent = content.slice(0, maxLength);
 
-    const task = `Summarize the comments on this reddit post. Comments are in the format author(comment score): comment. Comments with higher score are more important. The author's username is saito200.`
+    const task = `Summarize the comments on this reddit post, listing the locations in order of most to least attractive, and including some info for each. Comments are in the format author(comment score): comment. Comments with higher score are more important. The author's username is saito200.`
 
     const response = await openai.createChatCompletion({
       model: "gpt-4",
@@ -72,7 +72,25 @@ fs.readFile(inputFilename, 'utf8', async (error, fileContent) => {
     return;
   }
 
+  const formattedDir = 'formatted'
+  if (!fs.existsSync(formattedDir)) {
+    fs.mkdirSync(formattedDir);
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
   const formattedContent = formatContent(fileContent);
+  const formattedOutputPath = path.join(formattedDir, `${timestamp}.txt`)
+
+  fs.writeFile(formattedOutputPath, formattedContent, (error) => {
+    if (error) {
+      console.error(`Error writing file ${formattedOutputPath}:`, error);
+      return;
+    }
+
+    console.log(`Fomratted text saved to ${formattedOutputPath}`);
+  });
+
   const summary = await generateSummary(formattedContent);
 
   const summariesDir = 'summaries';
@@ -80,7 +98,6 @@ fs.readFile(inputFilename, 'utf8', async (error, fileContent) => {
     fs.mkdirSync(summariesDir);
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const outputFilename = `${timestamp}.txt`;
   const outputPath = path.join(summariesDir, outputFilename);
 
