@@ -133,3 +133,5 @@ output
 summaries
 formatted
 extracted-summaries
+venv
+_*/**

@@ -21,7 +21,7 @@ function formatContent(content) {
     return `${author}(${score}): ${commentContent}`;
   });
 
-  const formattedContent = `Title: ${postTitle}\nContent: ${postContent}\nComments:\n${formattedComments.join('\n')}`;
+  const formattedContent = `Title: ${postTitle}\nContent: ${postContent}\nComments:\n${formattedComments.join('\n\n')}`;
   return formattedContent;
 }
 
@@ -88,7 +88,7 @@ fs.readFile(inputFilename, 'utf8', async (error, fileContent) => {
       return;
     }
 
-    console.log(`Fomratted text saved to ${formattedOutputPath}`);
+    console.log(`Formatted text saved to ${formattedOutputPath}`);
   });
 
   const summary = await generateSummary(formattedContent);
